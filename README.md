@@ -3,8 +3,7 @@
 An interactive visualization tool for sorting algorithms with a dramatic Oppenheimer soundtrack.
 
 Live Demo
-[Click here to see it live](https://vedant303.github.io/sorting-visualizer/)
-
+https://vedant303.github.io/Sorting-Visualizer/
  Features
 - Bubble, Selection, Insertion Sort
 - Live bar movement
