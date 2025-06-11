@@ -909,6 +909,8 @@ async function partition(bars, low, high) {
         if (stopSorting) throw new Error("Sorting stopped");
         bars[j].classList.add("comparing");
         await delay();
+       comparisons++; 
+        document.getElementById("comparisons-count").textContent = comparisons;
         if (parseInt(bars[j].style.height) < pivot) {
             i++;
             if (i !== j) {
