@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Sorting Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 transition-colors duration-300">
+    <h1 class="text-4xl font-extrabold mb-6 drop-shadow-lg animate-pulse text-cyan-400">
+        Dynamic Sorting Visualizer
+    </h1>
+
+    <div class="controls flex flex-wrap justify-center items-center gap-4 p-4 bg-gray-800 rounded-xl shadow-lg border border-gray-700 w-full max-w-4xl mb-6 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
+        <div class="flex items-center gap-2">
+            <label for="num-bars" class="text-lg font-semibold text-gray-300">Bars:</label>
+            <input type="range" min="10" max="200" value="50" step="10" id="num-bars"
+                   class="slider-style">
+            <span id="num-bars-value" class="text-lg text-blue-400 font-bold w-10 text-right">50</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <label for="speed-slider" class="text-lg font-semibold text-gray-300">Speed:</label>
+            <input type="range" min="10" max="1000" value="100" step="10" id="speed-slider"
+                   class="slider-style accent-red-500">
+            <span id="speed-value" class="text-lg text-red-400 font-bold w-10 text-right">100</span>
+        </div>
+
+        <select id="algo-select" class="bg-gray-700 border border-gray-600 text-white p-2 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-300">
+            <option value="bubble">Bubble Sort</option>
+            <option value="selection">Selection Sort</option>
+            <option value="insertion">Insertion Sort</option>
+            <option value="shell">Shell Sort</option>
+            <option value="heap">Heap Sort</option>
+            <option value="radix">Radix Sort</option>
+            <option value="cocktail">Cocktail Sort</option>
+            <option value="quick">Quick Sort</option>
+            <option value="merge">Merge Sort</option>
+        </select>
+
+        <select id="array-type-select" class="bg-gray-700 border border-gray-600 text-white p-2 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-300">
+            <option value="random">Random</option>
+            <option value="reversed">Reversed</option>
+            <option value="nearly-sorted">Nearly Sorted</option>
+            <option value="few-unique">Few Unique</option>
+        </select>
+
+        <button onclick="startSort()"
+                class="button-primary">
+            Start Sort
+        </button>
+        <button onclick="resetSort()"
+                class="button-secondary">
+            Stop / Reset
+        </button>
+        <button onclick="toggleStepMode()" id="step-mode-toggle"
+                class="button-toggle">
+            Step Mode: OFF
+        </button>
+       
+        <button onclick="toggleTheme()" id="theme-toggle"
+                class="button-toggle">
+            Dark Mode
+        </button>
+        <button onclick="toggleMusic()" id="music-toggle"
+                class="button-toggle">
+            Play Music
+        </button>
+    </div>
+
+    <div id="user-input-container" class="hidden flex items-center justify-center gap-4 p-4 bg-gray-800 rounded-xl shadow-lg border border-gray-700 w-full max-w-4xl mb-6 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
+        <label for="user-array-input" class="text-lg font-semibold text-gray-300">Custom Array (comma-separated, values 10-400):</label>
+        <input type="text" id="user-array-input" placeholder="e.g., 50,200,120,350,80"
+               class="flex-1 bg-gray-700 border border-gray-600 text-white p-2 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        <button onclick="generateBars('user-defined')"
+                class="button-primary">
+            Load Custom
+        </button>
+    </div>
+
+    <div id="algorithm-info" class="p-4 bg-gray-900 rounded-xl shadow-lg border border-gray-700 w-full max-w-4xl mb-4 text-center dark:bg-gray-900 dark:border-gray-700 transition-colors duration-300">
+        <h2 id="algo-name" class="text-2xl font-bold text-cyan-400 mb-2 glow-text">Algorithm: N/A</h2>
+        <p class="text-sm text-gray-400 mb-1">Status: <span id="sort-status" class="font-semibold text-yellow-400">Ready</span></p>
+        <div class="flex flex-col md:flex-row justify-around text-lg font-semibold text-purple-400">
+            <div>Comparisons: <span id="comparisons-count" class="glow-text text-blue-400">0</span></div>
+            <div>Swaps: <span id="swaps-count" class="glow-text text-pink-400">0</span></div>
+            <div>Time (Avg): <span id="time-avg" class="glow-text text-green-400">$O(N/A)$</span></div>
+            <div>Time (Worst): <span id="time-worst" class="glow-text text-red-400">$O(N/A)$</span></div>
+            <div>Space: <span id="space-complexity" class="glow-text text-yellow-400">$O(N/A)$</span></div>
+        </div>
+    </div>
+
+    <div id="bars-container" class="flex justify-center items-end flex-grow w-full max-w-6xl h-96 min-h-[300px] bg-gray-900 border border-gray-700 rounded-xl shadow-lg p-2 dark:bg-gray-900 dark:border-gray-700 transition-colors duration-300"></div>
+
+    <div class="flex flex-wrap justify-center gap-4 w-full max-w-4xl mt-6">
+        <div class="educational-panel">
+            <h3 class="text-xl font-bold text-cyan-400 mb-2 glow-text cursor-pointer" onclick="togglePanel('pseudocode-panel')">
+                Pseudocode <span id="pseudocode-toggle-icon" class="float-right">&#9660;</span>
+            </h3>
+            <div id="pseudocode-panel" class="hidden text-sm text-gray-300 overflow-y-auto max-h-64 mt-2">
+                <pre id="pseudocode-display" class="whitespace-pre-wrap font-mono p-2 bg-gray-700 rounded-md text-left text-gray-200"></pre>
+            </div>
+        </div>
+
+        <div class="educational-panel">
+            <h3 class="text-xl font-bold text-cyan-400 mb-2 glow-text cursor-pointer" onclick="togglePanel('comparison-table-panel')">
+                Comparison Table <span id="comparison-table-toggle-icon" class="float-right">&#9660;</span>
+            </h3>
+            <div id="comparison-table-panel" class="hidden text-sm text-gray-300 overflow-x-auto mt-2">
+                <table class="w-full text-left table-auto border-collapse border border-gray-600">
+                    <thead>
+                        <tr class="bg-gray-700">
+                            <th class="p-2 border border-gray-600 text-purple-300">Algorithm</th>
+                            <th class="p-2 border border-gray-600 text-green-300">Time (Avg)</th>
+                            <th class="p-2 border border-gray-600 text-red-300">Time (Worst)</th>
+                            <th class="p-2 border border-gray-600 text-yellow-300">Space</th>
+                            <th class="p-2 border border-gray-600 text-blue-300">Stability</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Bubble Sort</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(1)$</td>
+                            <td class="p-2 border border-gray-600">Yes</td>
+                        </tr>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Selection Sort</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(1)$</td>
+                            <td class="p-2 border border-gray-600">No</td>
+                        </tr>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Insertion Sort</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(1)$</td>
+                            <td class="p-2 border border-gray-600">Yes</td>
+                        </tr>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Shell Sort</td>
+                            <td class="p-2 border border-gray-600">$O(N \log^2 N)$</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(1)$</td>
+                            <td class="p-2 border border-gray-600">No</td>
+                        </tr>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Heap Sort</td>
+                            <td class="p-2 border border-gray-600">$O(N \log N)$</td>
+                            <td class="p-2 border border-gray-600">$O(N \log N)$</td>
+                            <td class="p-2 border border-gray-600">$O(1)$</td>
+                            <td class="p-2 border border-gray-600">No</td>
+                        </tr>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Radix Sort</td>
+                            <td class="p-2 border border-gray-600">$O(Nk)$</td>
+                            <td class="p-2 border border-gray-600">$O(Nk)$</td>
+                            <td class="p-2 border border-gray-600">$O(N+k)$</td>
+                            <td class="p-2 border border-gray-600">Yes</td>
+                        </tr>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Cocktail Sort</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(1)$</td>
+                            <td class="p-2 border border-gray-600">Yes</td>
+                        </tr>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Quick Sort</td>
+                            <td class="p-2 border border-gray-600">$O(N \log N)$</td>
+                            <td class="p-2 border border-gray-600">$O(N^2)$</td>
+                            <td class="p-2 border border-gray-600">$O(\log N)$</td>
+                            <td class="p-2 border border-gray-600">No</td>
+                        </tr>
+                        <tr class="bg-gray-800 hover:bg-gray-700 transition-colors duration-150">
+                            <td class="p-2 border border-gray-600">Merge Sort</td>
+                            <td class="p-2 border border-gray-600">$O(N \log N)$</td>
+                            <td class="p-2 border border-gray-600">$O(N \log N)$</td>
+                            <td class="p-2 border border-gray-600">$O(N)$</td>
+                            <td class="p-2 border border-gray-600">Yes</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-gray-500 mt-2">
+                    Note: $k$ in Radix Sort complexity refers to the number of digits/bits.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <audio id="background-music" src="oppenheimer-music.mp3" loop></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
